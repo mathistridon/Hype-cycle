@@ -162,7 +162,6 @@ st.set_page_config(
     page_icon=":chart_with_upwards_trend:",
     layout="centered",
     initial_sidebar_state="auto",
-    theme="light",
 )
 
 # Centrer le titre avec du CSS
