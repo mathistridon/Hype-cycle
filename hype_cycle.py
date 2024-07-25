@@ -161,7 +161,6 @@ st.set_page_config(
     page_title="Hype Cycle",
     page_icon=":chart_with_upwards_trend:",
     layout="wide",
-    initial_sidebar_state="auto",
 )
 
 # Centrer le titre avec du CSS
