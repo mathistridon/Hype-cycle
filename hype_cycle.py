@@ -41,11 +41,11 @@ def extract_technologies_data(database_id):
 def calculate_x_position(hype_status, phase_weight):
     # Define the ranges for each phase
     phase_ranges = {
-        "Innovation Trigger": (0, 20),
-        "Peak of Inflated Expectations": (20, 40),
-        "Trough of Disillusionment": (40, 60),
-        "Slope of Enlightenment": (60, 80),
-        "Plateau of Productivity": (80, 100),
+        "Innovation Trigger": (0, 15),
+        "Peak of Inflated Expectations": (15, 25),
+        "Trough of Disillusionment": (25, 35),
+        "Slope of Enlightenment": (35, 60),
+        "Plateau of Productivity": (60, 100),
     }
 
     phase_start, phase_end = phase_ranges[hype_status]
@@ -74,7 +74,7 @@ def draw_hype_cycle(technologies):
     )
 
     vertical_lines = (
-        alt.Chart(pd.DataFrame({"x": [20, 40, 60, 80]}))
+        alt.Chart(pd.DataFrame({"x": [15, 25, 35, 60]}))
         .mark_rule(color="black")
         .encode(x="x")
     )
