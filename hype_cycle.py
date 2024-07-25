@@ -4,11 +4,13 @@ import altair as alt
 import streamlit as st
 from hypecycle import HypeCycle as hc
 from notion_client import Client
+from dotenv import load_dotenv
+import os
 
-# Configuration du token Notion et de l'ID de la base de données
-notion_token = "secret_m6WMowo9fV4d4uQ2bLupf8kOTWVzxc8yafiZBAzu3mk"
-notion_database_id = "3c010b8c-641a-43a7-916a-c6c6d65a686f"
+load_dotenv()
 
+notion_token = os.getenv("NOTION_TOKEN")
+notion_database_id = os.getenv("NOTION_DATABASE_ID")
 notion = Client(auth=notion_token)
 
 def get_notion_data(database_id):
