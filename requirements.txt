@@ -3,4 +3,5 @@ hypecycle==0.5.2
 notion_client==2.2.1
 numpy==2.0.1
 pandas==2.2.2
+python-dotenv==1.0.1
 streamlit==1.36.0
