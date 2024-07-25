@@ -128,8 +128,8 @@ def draw_hype_cycle(technologies):
     # Add labels for the sections of the hype cycle
     section_labels = pd.DataFrame(
         {
-            "x": [5, 17, 27, 37, 80],
-            "y": [0, 0, 0, 0, 0],
+            "x": [7, 20, 30, 48, 80],
+            "y": [-1, -1, -1, -1, -1],
             "text": [
                 "Technology Trigger",
                 "Peak of Inflated Expectations",
