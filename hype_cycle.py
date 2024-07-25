@@ -160,7 +160,7 @@ def draw_hype_cycle(technologies):
 st.set_page_config(
     page_title="Hype Cycle",
     page_icon=":chart_with_upwards_trend:",
-    # layout="wide",
+    layout="wide",
 )
 
 # Centrer le titre avec du CSS
