@@ -1,0 +1,6 @@
+altair==5.3.0
+hypecycle==0.5.2
+notion_client==2.2.1
+numpy==2.0.1
+pandas==2.2.2
+streamlit==1.36.0
