@@ -13,11 +13,9 @@ notion_token = os.getenv("NOTION_TOKEN")
 notion_database_id = os.getenv("NOTION_DATABASE_ID")
 notion = Client(auth=notion_token)
 
-
 def get_notion_data(database_id):
     results = notion.databases.query(database_id=database_id).get("results")
     return results
-
 
 def extract_technologies_data(database_id):
     data = get_notion_data(database_id)
@@ -37,8 +35,12 @@ def extract_technologies_data(database_id):
             )
     return pd.DataFrame(technologies)
 
+def get_max_weights_by_phase(technologies):
+    return technologies.groupby("Hype cycle")["Poids dans la phase"].max().to_dict()
 
-def calculate_x_position(hype_status, phase_weight):
+def calculate_x_position(hype_status, phase_weight, max_weights):
+    max_weight = max_weights[hype_status]
+    
     # Define the ranges for each phase
     phase_ranges = {
         "Innovation Trigger": (0, 15),
@@ -49,16 +51,14 @@ def calculate_x_position(hype_status, phase_weight):
     }
 
     phase_start, phase_end = phase_ranges[hype_status]
-    # Normalize the phase_weight to the range of the phase
-    x_position = phase_start + (phase_end - phase_start) * (phase_weight / 100)
+    # Normalize the phase_weight to the range of the phase based on max_weight
+    x_position = phase_start + (phase_end - phase_start) * (phase_weight / max_weight)
     return x_position
-
 
 def create_hype_cycle_data():
     x = np.linspace(0, 100, 5000)
     y = hc.create(x)
     return pd.DataFrame({"x": x, "y": y})
-
 
 def draw_hype_cycle(technologies):
     data = create_hype_cycle_data()
@@ -67,7 +67,7 @@ def draw_hype_cycle(technologies):
         alt.Chart(data)
         .mark_line(color="blue")
         .encode(
-            x=alt.X("x", title="Time", axis=alt.Axis(labels=False, ticks=True)),
+            x=alt.X("x", title="Time", axis=alt.Axis(labels=False, ticks=True), scale=alt.Scale(domain=[-1, 101])),
             y=alt.Y("y", title="Visibility", axis=alt.Axis(labels=False, ticks=True)),
         )
         .properties(width=1200, height=600)
@@ -75,12 +75,14 @@ def draw_hype_cycle(technologies):
 
     vertical_lines = (
         alt.Chart(pd.DataFrame({"x": [15, 25, 35, 60]}))
-        .mark_rule(color="black")
+        .mark_rule(color="grey")
         .encode(x="x")
     )
 
+    max_weights = get_max_weights_by_phase(technologies)
+
     technologies["x"] = technologies.apply(
-        lambda row: calculate_x_position(row["Hype cycle"], row["Poids dans la phase"]),
+        lambda row: calculate_x_position(row["Hype cycle"], row["Poids dans la phase"], max_weights),
         axis=1,
     )
     technologies["y"] = hc.create(technologies["x"])
@@ -90,12 +92,12 @@ def draw_hype_cycle(technologies):
         if i % 2 == 0:
             technologies.at[i, "text_x"] = technologies.at[i, "x"]
             technologies.at[i, "text_y"] = (
-                technologies.at[i, "y"] + (i + 1) * 2
+                technologies.at[i, "y"] - (i + 1) * 2
             )  # Ligne vers le haut
         else:
             technologies.at[i, "text_x"] = technologies.at[i, "x"]
             technologies.at[i, "text_y"] = (
-                technologies.at[i, "y"] - (i + 1) * 2
+                technologies.at[i, "y"] + (i + 1) * 2
             )  # Ligne vers le bas
 
     tech_points = (
@@ -115,7 +117,7 @@ def draw_hype_cycle(technologies):
 
     tech_text = (
         alt.Chart(technologies)
-        .mark_text(align="left", baseline="middle", color="red")
+        .mark_text(align="center", baseline="middle", color="red")
         .encode(x="text_x", y="text_y", text="Nom du sujet")
     )
 
@@ -125,36 +127,40 @@ def draw_hype_cycle(technologies):
         .encode(x="x", x2="text_x", y="y", y2="text_y")
     )
 
-    # Add labels for the sections of the hype cycle
+    # Create individual charts for each section label with specific colors
     section_labels = pd.DataFrame(
         {
-            "x": [7, 20, 30, 48, 80],
-            "y": [-1, -1, -1, -1, -1],
+            "x": [7.5, 20, 30, 48, 80],
+            "y": [0, 0, 0, 0, 0],
             "text": [
                 "Technology Trigger",
                 "Peak of Inflated Expectations",
-                "Trough of Disillusionment",
+                "Through of Disillusionment",
                 "Slope of Enlightenment",
                 "Plateau of Productivity",
             ],
-            "color": ["red", "orange", "purple", "green", "brown"],
+            "color": ["fuchsia", "blueviolet", "green", "darkorange", "brown"],
         }
     )
 
-    section_text = (
-        alt.Chart(section_labels)
-        .mark_text(baseline="top", dy=20, fontSize=12)
-        .encode(
-            x="x", y=alt.value(0), text="text", color=alt.Color("color", legend=None)
+    label_charts = []
+    for i, row in section_labels.iterrows():
+        label_chart = alt.Chart(pd.DataFrame({"x": [row["x"]], "text": [row["text"]]})).mark_text(
+            baseline="top", dy=20, fontWeight="bold", color=row["color"], fontSize=10
+        ).encode(
+            x="x:Q",
+            y=alt.value(0),
+            text="text:N"
         )
-    )
+        label_charts.append(label_chart)
+
+    section_text = alt.layer(*label_charts)
 
     chart = alt.layer(
         line, vertical_lines, tech_points, connectors, tech_text, section_text
-    )
+    ).properties(width=1200, height=600)
 
     return chart
-
 
 # Configuration de l'application Streamlit
 st.set_page_config(
